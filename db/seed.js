@@ -1,7 +1,10 @@
 const {
     client,
-    createUser
-} = require('./index.js');
+    createUser,
+    getAllUsers,
+    updateUser,
+    getUserById,
+} = require('./index');
 
 async function dropTables() {
     try {
@@ -29,7 +32,7 @@ try {
             password VARCHAR(255) NOT NULL,
             name VARCHAR(255) NOT NULL,
             location varchar(255) NOT NULL,
-            active boolean DEFAULT true
+            active BOOLEAN DEFAULT true
         );
     `);
 
@@ -76,12 +79,39 @@ async function rebuildDB() {
         await dropTables();
         await createTables();
         await createInitialUsers();
-        client.end();
     } catch (error) {
         console.log("Error during rebuildDB")
         throw error;
     };
 };
 
+async function testDB() {
+    try {
+        console.log("Calling getAllUsers...");
+        const users = await getAllUsers();
+        console.log("All Users: ", users)
 
-rebuildDB();
+        console.log("Calling updateUser on users[1]");
+        const updateUserResult = await updateUser(users[1].id, {
+            username: 'groovyash',
+            name: "Ashley Williams",
+            location: "Elk Grove, Michigan"
+        });
+        console.log("Updated User:", updateUserResult);
+
+
+        console.log("Calling getUserById with 1");
+        const chad = await getUserById(1);
+        console.log("User One:", chad);
+
+
+    } catch (error) {
+        console.log("Error testing the database!");
+        throw error;
+    };
+};
+
+rebuildDB()
+    .then(testDB)
+    .catch(console.error)
+    .finally(() => client.end());
