@@ -1,6 +1,7 @@
 const {
-    client
-} = require('./index');
+    client,
+    createUser
+} = require('./index.js');
 
 async function dropTables() {
     try {
@@ -26,6 +27,7 @@ try {
             id SERIAL PRIMARY KEY,
             username VARCHAR(255) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
+            name VARCHAR(255) NOT NULL,
             location varchar(255) NOT NULL,
             active boolean DEFAULT true
         );
@@ -68,19 +70,18 @@ async function createInitialUsers() {
     }
 };
 
-// async function rebuildDB() {
-//     try {
-//         client.connect();
-//         await dropTables();
-//         await createTables();
-//     } catch (error) {
-//         console.log("Error during rebuildDB")
-//         throw error;
-//     };
-// };
-
-async function testDB() {
-
+async function rebuildDB() {
+    try {
+        client.connect();
+        await dropTables();
+        await createTables();
+        await createInitialUsers();
+        client.end();
+    } catch (error) {
+        console.log("Error during rebuildDB")
+        throw error;
+    };
 };
 
-// rebuildDB();
+
+rebuildDB();
