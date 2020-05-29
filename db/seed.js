@@ -1,10 +1,10 @@
 const {
-    client,
     createUser,
     getAllUsers,
     updateUser,
     getUserById,
 } = require('./index');
+const client = require('./database');
 
 const bcrypt = require('bcrypt');
 const SALT_COUNT = 10;
@@ -75,23 +75,14 @@ async function createInitialUsers() {
 
         console.log(usersToCreate);
 
-        await Promise.all(usersToCreate.map(user => {
-            bcrypt.hash(user.password, SALT_COUNT, async function(err, hashedPassword) {
-                console.log(user);
-
-                user = {
-                    ...user,
-                    password: hashedPassword
-                }
-                const createdUser = await createUser(user);
-
-                console.log(createdUser);
-
-                if (err) {
-                    console.error(err);
-                }
-           });
-        }));
+        await Promise.all(usersToCreate.map(async user => {
+            const hashedPassword = bcrypt.hashSync(user.username, SALT_COUNT);
+            const createdUser = await createUser({
+                ...user,
+                password: hashedPassword // not the plaintext
+            });
+            return createdUser
+        }))
         
             // await createUser({ 
             //     username: 'muscleshuge', 
