@@ -6,6 +6,9 @@ const {
     getUserById,
 } = require('./index');
 
+const bcrypt = require('bcrypt');
+const SALT_COUNT = 10;
+
 async function dropTables() {
     try {
         console.log("Starting to drop tables...");
@@ -47,24 +50,68 @@ async function createInitialUsers() {
     try {
         console.log("Starting to create users...");
 
-        await createUser({ 
-            username: 'muscleshuge', 
-            password: 'iluvpreworkout',
-            name: 'Chad Freeman',
-            location: 'Los Angeles, California' 
-        });
-        await createUser({ 
-            username: 'fitandfun', 
-            password: 'pushupsarelife',
-            name: 'Tom Collins',
-            location: 'Nunya, Business'
-        });
-        await createUser({ 
-            username: 'fitgirl',
-            password: 'arnold',
-            name: 'Tamara Thompson',
-            location: 'Jacksonville, Florida'
-        });
+        const usersToCreate = [
+            {
+                username: 'muscleshuge', 
+                password: 'iluvpreworkout',
+                name: 'Chad Freeman',
+                location: 'Los Angeles, California'  
+            },
+
+            {
+                username: 'fitgirl',
+                password: 'arnold',
+                name: 'Tamara Thompson',
+                location: 'Jacksonville, Florida'
+            },
+
+            {
+                username: 'fitandfun', 
+                password: 'pushupsarelife',
+                name: 'Tom Collins',
+                location: 'Nunya, Business'
+            }
+        ];
+
+        console.log(usersToCreate);
+
+        await Promise.all(usersToCreate.map(user => {
+            bcrypt.hash(user.password, SALT_COUNT, async function(err, hashedPassword) {
+                console.log(user);
+
+                user = {
+                    ...user,
+                    password: hashedPassword
+                }
+                const createdUser = await createUser(user);
+
+                console.log(createdUser);
+
+                if (err) {
+                    console.error(err);
+                }
+           });
+        }));
+        
+            // await createUser({ 
+            //     username: 'muscleshuge', 
+            //     password: 'iluvpreworkout',
+            //     name: 'Chad Freeman',
+            //     location: 'Los Angeles, California' 
+            // });
+            // await createUser({ 
+            //     username: 'fitandfun', 
+            //     password: 'pushupsarelife',
+            //     name: 'Tom Collins',
+            //     location: 'Nunya, Business'
+            // });
+            // await createUser({ 
+            //     username: 'fitgirl',
+            //     password: 'arnold',
+            //     name: 'Tamara Thompson',
+            //     location: 'Jacksonville, Florida'
+            // });
+        
 
         console.log("Finished creating users!");
     } catch (error) {
@@ -75,6 +122,7 @@ async function createInitialUsers() {
 
 async function rebuildDB() {
     try {
+        console.log(client);
         client.connect();
         await dropTables();
         await createTables();
@@ -92,12 +140,12 @@ async function testDB() {
         console.log("All Users: ", users)
 
         console.log("Calling updateUser on users[1]");
-        const updateUserResult = await updateUser(users[1].id, {
-            username: 'groovyash',
-            name: "Ashley Williams",
-            location: "Elk Grove, Michigan"
-        });
-        console.log("Updated User:", updateUserResult);
+        // const updateUserResult = await updateUser(users[1].id, {
+        //     username: 'groovyash',
+        //     name: "Ashley Williams",
+        //     location: "Elk Grove, Michigan"
+        // });
+        // console.log("Updated User:", updateUserResult);
 
 
         console.log("Calling getUserById with 1");

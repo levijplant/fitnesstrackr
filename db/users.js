@@ -1,14 +1,16 @@
-const { Client } = require('pg');
-const client = new Client(process.env.DATABASE_URL || 'postgres://localhost:5432/fitness-dev');
+const { client }  = require('./index');
 
 async function createUser({ username, password, name, location }) {
     try {
+        console.log(password);
         const { rows: [ user ] } = await client.query(`
             INSERT INTO users(username, password, name, location) 
             VALUES($1, $2, $3, $4) 
             ON CONFLICT (username) DO NOTHING 
             RETURNING *;
         `, [ username, password, name, location ]);
+
+        console.log(user);
 
         return user;
     } catch (error) {
@@ -70,11 +72,24 @@ async function getAllUsers() {
     };
 };
 
+async function getUserByUsername(username) {
+    try {
+        const { rows: [ user ] } = await client.query(`
+            SELECT *
+            FROM users
+            WHERE username=$1
+        `, [ username ]);
+        return user; 
+    } catch (error) {
+        throw error;
+    };
+};
+
 
 module.exports = {
-    client,
     createUser,
     getAllUsers,
     updateUser,
     getUserById,
+    getUserByUsername
 };
