@@ -1,10 +1,14 @@
+const client = require('./database');
 const {
     createUser,
     getAllUsers,
     updateUser,
     getUserById,
+    createActivity,
+    updateActivity,
+    getAllActivities,
+    getActivityByName,
 } = require('./index');
-const client = require('./database');
 
 const bcrypt = require('bcrypt');
 const SALT_COUNT = 10;
@@ -14,6 +18,8 @@ async function dropTables() {
         console.log("Starting to drop tables...");
 
         await client.query(`
+            DROP TABLE IF EXISTS routines;
+            DROP TABLE IF EXISTS activities;
             DROP TABLE IF EXISTS users;
         `);
 
@@ -34,8 +40,20 @@ async function createTables() {
             username VARCHAR(255) UNIQUE NOT NULL,
             password VARCHAR(255) NOT NULL,
             name VARCHAR(255) NOT NULL,
-            location varchar(255) NOT NULL,
+            location VARCHAR(255) NOT NULL,
             active BOOLEAN DEFAULT true
+        );
+        CREATE TABLE activities(
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            description TEXT NOT NULL
+        );
+        CREATE TABLE routines(
+            id SERIAL PRIMARY KEY,
+            "creatorId" INTEGER REFERENCES users(id),
+            public BOOLEAN DEFAULT false,
+            name VARCHAR(255) UNIQUE NOT NULL,
+            goal TEXT not null
         );
     `);
 
@@ -76,7 +94,7 @@ async function createInitialUsers() {
         console.log(seededUsers);
 
         await Promise.all(seededUsers.map(async user => {
-            const hashedPassword = bcrypt.hashSync(user.username, SALT_COUNT); 
+            const hashedPassword = bcrypt.hashSync(user.username, SALT_COUNT);
             const seededUser = await createUser({
                 ...user,
                 password: hashedPassword
@@ -91,6 +109,39 @@ async function createInitialUsers() {
     };
 };
 
+async function createInitialActivities() {
+    try {
+        console.log("Starting to create activities...");
+
+        const seededActivities = [
+
+            {
+                name: 'Mountain Biking',
+                description: 'Riding a mountain bike on some sick trails.'
+            },
+
+            {
+                name: '12 Ounce Curls',
+                description: 'Because who needs to lift anything heavier?'
+            },
+
+            {
+                name: 'Jumping Jacks',
+                description: 'I am too fat for this crap.'
+            }
+
+        ];
+
+        await Promise.all(seededActivities.map(async activity => {
+            const seededActivity = await createActivity(activity);
+            return seededActivity;
+        }));
+    } catch (error) {
+        console.error("Error creating activities!");
+        throw error;
+    };
+};
+
 async function rebuildDB() {
     try {
         console.log(client);
@@ -98,6 +149,7 @@ async function rebuildDB() {
         await dropTables();
         await createTables();
         await createInitialUsers();
+        createInitialActivities();
     } catch (error) {
         console.log("Error during rebuildDB")
         throw error;
@@ -123,6 +175,21 @@ async function testDB() {
         console.log("Calling getUserById with 1");
         const chad = await getUserById(1);
         console.log("User One:", chad);
+
+        console.log("Calling getAllActivies...");
+        const activities = await getAllActivities();
+        console.log("All Activities: ", activities);
+
+        console.log("Calling updateActivity on activity[2]");
+        const updatedActivity = await updateActivity(activities[2].id, {
+            name: 'Jumping Jacks',
+            description: `These aren't so bad anymore!`
+        });
+        console.log("Updated Activity: ", updatedActivity);
+
+        console.log("Getting activity Mountain Biking!");
+        const mountainBiking = await getActivityByName("Mountain Biking");
+        console.log("Mountain Biking: ", mountainBiking);
 
         console.log("Finished testing the database!")
     } catch (error) {

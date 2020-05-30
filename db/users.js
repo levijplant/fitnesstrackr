@@ -2,7 +2,6 @@ const client = require('./database');
 
 async function createUser({ username, password, name, location }) {
     try {
-        console.log(password);
         const { rows: [ user ] } = await client.query(`
             INSERT INTO users(username, password, name, location) 
             VALUES($1, $2, $3, $4) 
