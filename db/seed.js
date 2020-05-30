@@ -1,10 +1,10 @@
 const {
-    client,
     createUser,
     getAllUsers,
     updateUser,
     getUserById,
 } = require('./index');
+const client = require('./database');
 
 const bcrypt = require('bcrypt');
 const SALT_COUNT = 10;
@@ -93,7 +93,7 @@ async function createInitialUsers() {
 
 async function rebuildDB() {
     try {
-        console.log('>>>>>', client);
+        console.log(client);
         client.connect();
         await dropTables();
         await createTables();
