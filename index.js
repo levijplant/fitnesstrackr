@@ -3,7 +3,7 @@ require('dotenv').config();
 const PORT = process.env.PORT || 3000;
 const express = require('express');
 const server = express();
-const { client } = require('./db');
+const { client } = require('./db/index');
 client.connect();
 
 server.listen(PORT, () => {
