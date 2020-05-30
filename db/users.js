@@ -1,4 +1,4 @@
-const { client }  = require('./index');
+const client = require('./database');
 
 async function createUser({ username, password, name, location }) {
     try {
@@ -9,8 +9,6 @@ async function createUser({ username, password, name, location }) {
             ON CONFLICT (username) DO NOTHING 
             RETURNING *;
         `, [ username, password, name, location ]);
-
-        console.log(user);
 
         return user;
     } catch (error) {
@@ -62,7 +60,7 @@ async function getUserById(userId) {
 async function getAllUsers() {
     try {
         const { rows } = await client.query(`
-            SELECT id, username, name, location, active
+            SELECT id, username, password, name, location, active
             FROM users;
         `);
 
@@ -84,7 +82,6 @@ async function getUserByUsername(username) {
         throw error;
     };
 };
-
 
 module.exports = {
     createUser,

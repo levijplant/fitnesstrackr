@@ -1,10 +1,10 @@
 const {
-    client,
     createUser,
     getAllUsers,
     updateUser,
     getUserById,
 } = require('./index');
+const client = require('./database');
 
 const bcrypt = require('bcrypt');
 const SALT_COUNT = 10;
@@ -25,10 +25,10 @@ async function dropTables() {
 };
 
 async function createTables() {
-try {
-    console.log("Starting to create tables...");
+    try {
+        console.log("Starting to create tables...");
 
-    await client.query(`
+        await client.query(`
         CREATE TABLE users (
             id SERIAL PRIMARY KEY,
             username VARCHAR(255) UNIQUE NOT NULL,
@@ -39,23 +39,23 @@ try {
         );
     `);
 
-    console.log("Finished creating tables!")
-} catch (error) {
-    console.log("Error creating tables!");
-    throw error;
-};
+        console.log("Finished creating tables!")
+    } catch (error) {
+        console.log("Error creating tables!");
+        throw error;
+    };
 };
 
 async function createInitialUsers() {
     try {
         console.log("Starting to create users...");
 
-        const usersToCreate = [
+        const seededUsers = [
             {
-                username: 'muscleshuge', 
+                username: 'muscleshuge',
                 password: 'iluvpreworkout',
                 name: 'Chad Freeman',
-                location: 'Los Angeles, California'  
+                location: 'Los Angeles, California'
             },
 
             {
@@ -66,58 +66,29 @@ async function createInitialUsers() {
             },
 
             {
-                username: 'fitandfun', 
+                username: 'fitandfun',
                 password: 'pushupsarelife',
                 name: 'Tom Collins',
                 location: 'Nunya, Business'
             }
         ];
 
-        console.log(usersToCreate);
+        console.log(seededUsers);
 
-        await Promise.all(usersToCreate.map(user => {
-            bcrypt.hash(user.password, SALT_COUNT, async function(err, hashedPassword) {
-                console.log(user);
-
-                user = {
-                    ...user,
-                    password: hashedPassword
-                }
-                const createdUser = await createUser(user);
-
-                console.log(createdUser);
-
-                if (err) {
-                    console.error(err);
-                }
-           });
+        await Promise.all(seededUsers.map(async user => {
+            const hashedPassword = bcrypt.hashSync(user.username, SALT_COUNT); 
+            const seededUser = await createUser({
+                ...user,
+                password: hashedPassword
+            });
+            return seededUser;
         }));
-        
-            // await createUser({ 
-            //     username: 'muscleshuge', 
-            //     password: 'iluvpreworkout',
-            //     name: 'Chad Freeman',
-            //     location: 'Los Angeles, California' 
-            // });
-            // await createUser({ 
-            //     username: 'fitandfun', 
-            //     password: 'pushupsarelife',
-            //     name: 'Tom Collins',
-            //     location: 'Nunya, Business'
-            // });
-            // await createUser({ 
-            //     username: 'fitgirl',
-            //     password: 'arnold',
-            //     name: 'Tamara Thompson',
-            //     location: 'Jacksonville, Florida'
-            // });
-        
 
         console.log("Finished creating users!");
     } catch (error) {
         console.error("Error creating users!");
         throw error;
-    }
+    };
 };
 
 async function rebuildDB() {
@@ -135,24 +106,25 @@ async function rebuildDB() {
 
 async function testDB() {
     try {
+        console.log("Beginning to test the database...")
+
         console.log("Calling getAllUsers...");
         const users = await getAllUsers();
         console.log("All Users: ", users)
 
         console.log("Calling updateUser on users[1]");
-        // const updateUserResult = await updateUser(users[1].id, {
-        //     username: 'groovyash',
-        //     name: "Ashley Williams",
-        //     location: "Elk Grove, Michigan"
-        // });
-        // console.log("Updated User:", updateUserResult);
-
+        const updateUserResult = await updateUser(users[1].id, {
+            username: 'groovyash',
+            name: "Ashley Williams",
+            location: "Elk Grove, Michigan"
+        });
+        console.log("Updated User:", updateUserResult);
 
         console.log("Calling getUserById with 1");
         const chad = await getUserById(1);
         console.log("User One:", chad);
 
-
+        console.log("Finished testing the database!")
     } catch (error) {
         console.log("Error testing the database!");
         throw error;
@@ -162,4 +134,4 @@ async function testDB() {
 rebuildDB()
     .then(testDB)
     .catch(console.error)
-    .finally(() => client.end());
+    .finally(() => client.end())
