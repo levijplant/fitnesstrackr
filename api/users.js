@@ -30,7 +30,7 @@ usersRouter.post('/register', async (req, res, next) => {
         });
       }
 
-      bcrypt.hash(password, SALT_COUNT, async function(hashedPassword) {
+      bcrypt.hash(password, SALT_COUNT, async function(err, hashedPassword) {
         const user = await createUser({
             username,
             password: hashedPassword,
@@ -54,5 +54,42 @@ usersRouter.post('/register', async (req, res, next) => {
       next({ name, message })
     } 
   });
+
+  usersRouter.post('/login', async (req, res, next) => {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      next({
+        name: "MissingCredentialsError",
+        message: "Please supply both a username and password"
+      });
+    };
+
+    try {
+      const user = await getUserByUsername(username);
+      const hashedPassword = user.password;
+
+      console.log(hashedPassword)
+      console.log(password)
+
+
+        bcrypt.compare(password, hashedPassword, function(err, passwordsMatch) {
+          if (passwordsMatch) {
+            const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET)
+            res.send({ message: "you're logged in!", token: `${ token }` });
+
+            return token;
+          } else {
+            next({ 
+              name: 'IncorrectCredentialsError', 
+              message: 'Username or password is incorrect'
+            });
+          };    
+        });
+    } catch(error) {
+      console.log(error);
+      next(error);
+    }
+});
 
 module.exports = usersRouter;
