@@ -3,6 +3,7 @@ const { getAllUsers, getUserByUsername, createUser } = require('../db');
 const { requireUser, requireActiveUser } = require('./utils');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+let usertoken;
 
 usersRouter.use((req, res, next) => {
   console.log('A request is being made to /users');
@@ -45,6 +46,8 @@ usersRouter.post('/register', async (req, res, next) => {
         expiresIn: '1w'
       });
 
+      usertoken = token;
+
       res.send({
         message: "thank you for signing up",
         token
@@ -77,6 +80,8 @@ usersRouter.post('/login', async (req, res, next) => {
       if (passwordsMatch) {
         const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET)
         res.send({ message: "you're logged in!", token: `${token}` });
+
+        usertoken = token;
 
         return token;
       } else {
@@ -137,4 +142,7 @@ usersRouter.patch('/:userId', requireUser, async (req, res, next) => {
   };
 });
 
-module.exports = usersRouter;
+module.exports = {
+  usersRouter,
+  usertoken
+}
