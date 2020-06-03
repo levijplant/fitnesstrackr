@@ -69,9 +69,24 @@ async function getActivityByName(name) {
     };
 };
 
+async function getActivityById(activityId) {
+    try {
+        const { rows } = await client.query(`
+            SELECT *
+            FROM activities
+            WHERE id=$1;
+        `, [ activityId ]);
+
+        return rows;
+    } catch (error) {
+        throw error;
+    }
+};
+
 module.exports = {
     createActivity,
     updateActivity,
     getAllActivities,
     getActivityByName,
+    getActivityById
 };

@@ -8,6 +8,8 @@ const {
     updateActivity,
     getAllActivities,
     getActivityByName,
+    createRoutine,
+    getAllRoutines
 } = require('./index');
 
 const bcrypt = require('bcrypt');
@@ -136,11 +138,55 @@ async function createInitialActivities() {
             const seededActivity = await createActivity(activity);
             return seededActivity;
         }));
+
+        console.log("Finished creating activities...");
     } catch (error) {
         console.error("Error creating activities!");
         throw error;
     };
 };
+
+async function createInitialRoutines() {
+    try {
+        console.log("Starting to create routines...");
+
+        const seededRoutines = [
+
+            {
+                creatorId: 1,
+                public: true,
+                name: 'Chest Blast!',
+                goal: '1000 push ups in a row!!!!!'
+            },
+
+            {
+                creatorId: 2,
+                public: false,
+                name: 'The Glute Lifter',
+                goal: 'Buns of steel!!!'
+            },
+
+            {
+                creatorId: 3,
+                public: true,
+                name: 'Best Workout Ever',
+                goal: 'To never leave the couch!!'
+            },
+
+        ];
+
+        await Promise.all(seededRoutines.map(async routine => {
+            const seededRoutine = await createRoutine(routine);
+            return seededRoutine
+        }));
+
+        console.log("Finished creating routines...");
+    } catch (error) {
+        console.error("Error creating routines!");
+        throw error;
+    };
+};
+
 
 async function rebuildDB() {
     try {
@@ -149,7 +195,8 @@ async function rebuildDB() {
         await dropTables();
         await createTables();
         await createInitialUsers();
-        createInitialActivities();
+        await createInitialActivities();
+        await createInitialRoutines();
     } catch (error) {
         console.log("Error during rebuildDB")
         throw error;
@@ -190,6 +237,10 @@ async function testDB() {
         console.log("Getting activity Mountain Biking!");
         const mountainBiking = await getActivityByName("Mountain Biking");
         console.log("Mountain Biking: ", mountainBiking);
+
+        console.log("Calling getAllRoutines...");
+        const routines = await getAllRoutines();
+        console.log("All Routines: ", routines);
 
         console.log("Finished testing the database!")
     } catch (error) {
