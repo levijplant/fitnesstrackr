@@ -1,7 +1,6 @@
 const activitiesRouter = require('express').Router();
 const { getAllActivities, updateActivity, createActivity, getActivityById } = require('../db');
 const { requireUser, requireActiveUser } = require('./utils');
-const { usertoken } = require('./users');
 
 activitiesRouter.use((req, res, next) => {
     console.log('A request is being made to /activities');
@@ -48,7 +47,6 @@ activitiesRouter.patch('/:activityId', requireUser, async (req, res, next) => {
     }
 
     try {
-        // const originalActivity = await getActivityById(activityId);
         const updatedActivity = await updateActivity(activityId, updateFields);
 
         res.send({ activity: updatedActivity });

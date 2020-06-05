@@ -83,10 +83,27 @@ async function getActivityById(activityId) {
     }
 };
 
+async function getActivitiesByRoutineId (routineId) {
+
+    try {
+        const { rows } = await client.query(`
+        SELECT *
+        FROM activities
+        JOIN routine_activities ON routine_activities."activityId"=activities.id
+        WHERE routine_activities."routineId"=$1
+    `, [ routineId ]);
+
+        return rows;
+    } catch(error) {
+        throw error;
+    };
+};
+
 module.exports = {
     createActivity,
     updateActivity,
     getAllActivities,
     getActivityByName,
-    getActivityById
+    getActivityById,
+    getActivitiesByRoutineId
 };

@@ -78,8 +78,6 @@ usersRouter.post('/login', async (req, res, next) => {
         const token = jwt.sign({ id: user.id, username: user.username }, process.env.JWT_SECRET)
         res.send({ message: "you're logged in!", token: `${token}` });
 
-        usertoken = token;
-
         return token;
       } else {
         next({
@@ -139,6 +137,4 @@ usersRouter.patch('/:userId', requireUser, async (req, res, next) => {
   };
 });
 
-module.exports = {
-  usersRouter,
-}
+module.exports = usersRouter

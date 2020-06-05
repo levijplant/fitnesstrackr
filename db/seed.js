@@ -9,7 +9,10 @@ const {
     getAllActivities,
     getActivityByName,
     createRoutine,
-    getAllRoutines
+    getAllRoutines,
+    getAllPublicRoutines,
+    getAllRoutinesByUser,
+    getAllPublicRoutinesByUser,
 } = require('./index');
 
 const bcrypt = require('bcrypt');
@@ -20,6 +23,7 @@ async function dropTables() {
         console.log("Starting to drop tables...");
 
         await client.query(`
+            DROP TABLE IF EXISTS routine_activities;
             DROP TABLE IF EXISTS routines;
             DROP TABLE IF EXISTS activities;
             DROP TABLE IF EXISTS users;
@@ -45,17 +49,25 @@ async function createTables() {
             location VARCHAR(255) NOT NULL,
             active BOOLEAN DEFAULT true
         );
-        CREATE TABLE activities(
+        CREATE TABLE activities (
             id SERIAL PRIMARY KEY,
             name VARCHAR(255) UNIQUE NOT NULL,
             description TEXT NOT NULL
         );
-        CREATE TABLE routines(
+        CREATE TABLE routines (
             id SERIAL PRIMARY KEY,
             "creatorId" INTEGER REFERENCES users(id),
             public BOOLEAN DEFAULT false,
             name VARCHAR(255) UNIQUE NOT NULL,
             goal TEXT not null
+        );
+        CREATE TABLE routine_activities (
+            id SERIAL PRIMARY KEY,
+            "routineId" INTEGER REFERENCES routines(id),
+            "activityId" INTEGER REFERENCES activities(id),
+            duration INTEGER,
+            count INTEGER,
+            UNIQUE ("routineId", "activityId")
         );
     `);
 
@@ -156,22 +168,29 @@ async function createInitialRoutines() {
                 creatorId: 1,
                 public: true,
                 name: 'Chest Blast!',
-                goal: '1000 push ups in a row!!!!!'
+                goal: '1000 push ups in a row!!!!!',
             },
 
             {
                 creatorId: 2,
                 public: false,
                 name: 'The Glute Lifter',
-                goal: 'Buns of steel!!!'
+                goal: 'Buns of steel!!!',
             },
 
             {
                 creatorId: 3,
                 public: true,
                 name: 'Best Workout Ever',
-                goal: 'To never leave the couch!!'
+                goal: 'To never leave the couch!!',
             },
+            
+            {
+                creatorId: 1,
+                public: true,
+                name: 'Arm Assault',
+                goal: 'Biceps for days.',
+            }
 
         ];
 
@@ -197,6 +216,7 @@ async function rebuildDB() {
         await createInitialUsers();
         await createInitialActivities();
         await createInitialRoutines();
+        // await createIntitialRoutinesActivities()
     } catch (error) {
         console.log("Error during rebuildDB")
         throw error;
@@ -207,11 +227,11 @@ async function testDB() {
     try {
         console.log("Beginning to test the database...")
 
-        console.log("Calling getAllUsers...");
+        console.log("Calling getAllUsers.");
         const users = await getAllUsers();
         console.log("All Users: ", users)
 
-        console.log("Calling updateUser on users[1]");
+        console.log("Calling updateUser on users[1].");
         const updateUserResult = await updateUser(users[1].id, {
             username: 'groovyash',
             name: "Ashley Williams",
@@ -219,15 +239,15 @@ async function testDB() {
         });
         console.log("Updated User:", updateUserResult);
 
-        console.log("Calling getUserById with 1");
+        console.log("Calling getUserById with 1.");
         const chad = await getUserById(1);
         console.log("User One:", chad);
 
-        console.log("Calling getAllActivies...");
+        console.log("Calling getAllActivies.");
         const activities = await getAllActivities();
         console.log("All Activities: ", activities);
 
-        console.log("Calling updateActivity on activity[2]");
+        console.log("Calling updateActivity on activity[2].");
         const updatedActivity = await updateActivity(activities[2].id, {
             name: 'Jumping Jacks',
             description: `These aren't so bad anymore!`
@@ -238,9 +258,21 @@ async function testDB() {
         const mountainBiking = await getActivityByName("Mountain Biking");
         console.log("Mountain Biking: ", mountainBiking);
 
-        console.log("Calling getAllRoutines...");
+        console.log("Calling getAllRoutines.");
         const routines = await getAllRoutines();
         console.log("All Routines: ", routines);
+
+        console.log("Call getAllPublicRoutines.");
+        const publicRoutines = await getAllPublicRoutines();
+        console.log("Public Routines: ", publicRoutines);
+
+        console.log("Calling getAllRoutinesByUser with user muscleshuge.");
+        const muscleshugeRoutines = await getAllRoutinesByUser("muscleshuge");
+        console.log("muscleshuge Routines: ", muscleshugeRoutines);
+
+        console.log("Calling getAllPublicRoutinesByUser with user muscleshuge");
+        const muscleshugePublicRoutines = await getAllPublicRoutinesByUser("muscleshuge");
+        console.log("muscleshuge Public Routines: ", muscleshugePublicRoutines);
 
         console.log("Finished testing the database!")
     } catch (error) {
