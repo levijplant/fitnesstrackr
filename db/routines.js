@@ -105,7 +105,6 @@ async function getAllRoutinesByUser(username) {
         const user = await getUserByUsername(username);
         const id = user.id;
         
-        
         const { rows: routines } = await client.query(`
             SELECT *
             FROM routines
@@ -116,11 +115,6 @@ async function getAllRoutinesByUser(username) {
         for (let routine of routines) {
             routine.activites = await getActivitiesByRoutineId(routine.id);
         };
-        //loop over rows
-            //on each routine query the db for activities
-            //join on routine_activites query so you can get the routineId
-            //filter WHERE routineId equals the id of the routine.
-            //[ ]
         
         return routines;
     } catch (error) {
@@ -151,6 +145,26 @@ async function getAllPublicRoutinesByUser(username) {
     };
 };
 
+async function deleteRoutine(id) {
+    await client.query(`
+        DELETE FROM routines
+        WHERE id=$1;
+    `, [ id ]);
+
+    await client.query(`
+        DELETE FROM routine_activities
+        WHERE "routineId"=$1;
+    `, [ id ])
+}
+
+async function getPublicRoutinesByActivity() {
+    try {
+        
+    } catch (error) {
+        throw error
+    }
+}
+
 module.exports = {
     createRoutine,
     updateRoutine,
@@ -160,4 +174,5 @@ module.exports = {
     getAllPublicRoutines,
     getAllRoutinesByUser,
     getAllPublicRoutinesByUser,
+    deleteRoutine
 };

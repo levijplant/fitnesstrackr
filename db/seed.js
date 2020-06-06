@@ -142,6 +142,26 @@ async function createInitialActivities() {
             {
                 name: 'Jumping Jacks',
                 description: 'I am too fat for this crap.'
+            },
+
+            {
+                name: 'Wide Push Ups',
+                description: 'Push ups with your arms as wide as possible.'
+            },
+
+            {
+                name: 'Military Style Push Ups',
+                description: 'Keep arms as close to body throughout the range of motion.'
+            },
+
+            {
+                name: 'Dumbbell Curls',
+                description: 'Curl them dumbbells!'
+            },
+
+            {
+                name: 'Barbell Curls',
+                description: 'Curl them Barbells!'
             }
 
         ];

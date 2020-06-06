@@ -28,7 +28,14 @@ usersRouter.post('/register', async (req, res, next) => {
         name: 'UserExistsError',
         message: 'A user by that username already exists'
       });
-    }
+    };
+
+    if (password.length < 8) {
+      next({
+        name: 'PasswordTooShort',
+        message: 'Password must be at least 8 characters'
+      })
+    };
 
     bcrypt.hash(password, SALT_COUNT, async function (err, hashedPassword) {
       const user = await createUser({
