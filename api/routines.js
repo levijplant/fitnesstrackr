@@ -1,7 +1,5 @@
 const routinesRouter = require('express').Router();
-const { createRoutine, updateRoutine, getAllRoutines, getRoutineById, deleteRoutine } = require('../db/routines');
-const { getActivityById } = require('../db/activities');
-const { addActivityToRoutine } = require('../db/routine_activities');
+const { createRoutine, updateRoutine, getAllRoutines, getRoutineById, deleteRoutine, getActivityById, addActivityToRoutine } = require('../db');
 const { requireUser, requireActiveUser } = require('./utils');
 
 routinesRouter.use((req, res, next) => {
@@ -11,9 +9,7 @@ routinesRouter.use((req, res, next) => {
 
 routinesRouter.get('/', async (req, res) => {
     const routines = await getAllRoutines();
-    res.send({
-        routines
-    });
+    res.send({ routines });
 });
 
 routinesRouter.post('/', requireUser, async (req, res, next) => {
@@ -43,23 +39,24 @@ routinesRouter.patch('/:routineId', requireUser, async (req, res, next) => {
 
     if (name) {
         updateFields.name = name;
-    }
+    };
 
     if (goal) {
         updateFields.goal = goal;
-    }  
+    };
     
     if (public) {
         updateFields.public = public;
-    }
+    };
 
     try {
         const originalRoutine = await getRoutineById(routineId);
 
         if(originalRoutine.creatorId === req.user.id) {
             const updatedRoutine = await updateRoutine(routineId, updateFields);
-            res.send({ routine: updatedRoutine })
-        }
+            res.send({ routine: updatedRoutine });
+        };
+
     } catch ({ name, message }) {
         next({ name, message });
     };
@@ -74,12 +71,12 @@ routinesRouter.delete('/:routineId', requireUser, async (req, res, next) => {
         if (routine.creatorId === req.user.id) {
             await deleteRoutine(routineId);
             console.log('routine has been deleted!');
-        }
+        };
 
         res.send('routine has been deleted!')
     } catch ({ name, message }) {
-        next({ name, message })
-    }
+        next({ name, message });
+    };
 });
 
 routinesRouter.post('/:routineId/activities', requireUser, async (req, res, next) => {
@@ -91,8 +88,8 @@ routinesRouter.post('/:routineId/activities', requireUser, async (req, res, next
     
         res.send({ routineActivity });
     } catch ({ name, message }) {
-        next({ name, message })
-    }
+        next({ name, message });
+    };
 });
 
 module.exports = routinesRouter;

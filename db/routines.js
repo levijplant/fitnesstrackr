@@ -1,6 +1,7 @@
 const client = require('./database');
 const { getUserByUsername, getUserById } = require('./users');
-const { getActivitiesByRoutineId } = require('./activities')
+const { getActivitiesByRoutineId } = require('./activities');
+const { addActivityToRoutine } =  require('./routine_activities');
 
 async function createRoutine({ creatorId, public, name, goal }) {
     try {
@@ -31,6 +32,7 @@ async function updateRoutine(id, fields = {}) {
             WHERE id=${ id }
             RETURNING *;
         `, Object.values(fields));
+
         return rows;
     } catch (error) {
         throw error;
@@ -45,7 +47,7 @@ async function getAllRoutines() {
         `);
 
         for (let routine of routines) {
-            routine.activites = await getActivitiesByRoutineId(routine.id);
+            routine.activities = await getActivitiesByRoutineId(routine.id);
         };
 
         return routines;
@@ -91,7 +93,7 @@ async function getAllPublicRoutines() {
         `);
 
         for (let routine of routines) {
-            routine.activites = await getActivitiesByRoutineId(routine.id);
+            routine.activities = await getActivitiesByRoutineId(routine.id);
         };
 
         return routines;
@@ -111,9 +113,8 @@ async function getAllRoutinesByUser(username) {
             WHERE "creatorId"=${ id };
         `);
 
-
         for (let routine of routines) {
-            routine.activites = await getActivitiesByRoutineId(routine.id);
+            routine.activities = await getActivitiesByRoutineId(routine.id);
         };
         
         return routines;
@@ -136,7 +137,7 @@ async function getAllPublicRoutinesByUser(username) {
         `);
 
         for (let routine of routines) {
-            routine.activites = await getActivitiesByRoutineId(routine.id);
+            routine.activities = await getActivitiesByRoutineId(routine.id);
         };
 
         return routines;
@@ -145,25 +146,53 @@ async function getAllPublicRoutinesByUser(username) {
     };
 };
 
-async function deleteRoutine(id) {
-    await client.query(`
-        DELETE FROM routines
-        WHERE id=$1;
-    `, [ id ]);
-
-    await client.query(`
-        DELETE FROM routine_activities
-        WHERE "routineId"=$1;
-    `, [ id ])
-}
-
-async function getPublicRoutinesByActivity() {
+async function getPublicRoutinesByActivity(activityId) {
     try {
-        
+        const { rows: routines } = await client.query(`
+            SELECT *
+            FROM routines
+            JOIN routine_activities ON routine_activities."routineId"=routines.id
+            WHERE routine_activities."activityId"=$1
+        `, [ activityId ]);
+
+        for (let routine of routines) {
+            routine.activities = await getActivitiesByRoutineId(routine.id);
+            console.log(routine.activities)
+
+        };
+
+        return routines;
     } catch (error) {
         throw error
-    }
-}
+    };
+};
+
+// try {
+//     const { rows } = await client.query(`
+//     SELECT *
+//     FROM activities
+//     JOIN routine_activities ON routine_activities."activityId"=activities.id
+//     WHERE routine_activities."routineId"=$1
+// `, [ routineId ]);
+
+//     return rows;
+
+
+async function deleteRoutine(id) {
+    try {
+        await client.query(`
+            DELETE FROM routines
+            WHERE id=$1;
+        `, [ id ]);
+
+        await client.query(`
+            DELETE FROM routine_activities
+            WHERE "routineId"=$1;
+        `, [ id ]);
+    } catch(error) {
+        throw error;
+    };
+};
 
 module.exports = {
     createRoutine,
@@ -174,5 +203,6 @@ module.exports = {
     getAllPublicRoutines,
     getAllRoutinesByUser,
     getAllPublicRoutinesByUser,
-    deleteRoutine
+    getPublicRoutinesByActivity,
+    deleteRoutine,
 };

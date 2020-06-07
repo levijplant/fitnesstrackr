@@ -1,5 +1,5 @@
 const activitiesRouter = require('express').Router();
-const { getAllActivities, updateActivity, createActivity, getActivityById } = require('../db');
+const { getAllActivities, updateActivity, createActivity, getActivityById, getPublicRoutinesByActivity } = require('../db');
 const { requireUser, requireActiveUser } = require('./utils');
 
 activitiesRouter.use((req, res, next) => {
@@ -9,9 +9,17 @@ activitiesRouter.use((req, res, next) => {
 
 activitiesRouter.get('/', async (req, res) => {
     const activities = await getAllActivities();
-    res.send({
-        activities
-    });
+    res.send({ activities });
+});
+
+activitiesRouter.get('/:activityId/routines', async (req, res, next) => {
+    const { activityId } = req.params;
+    try {
+        const routines = await getPublicRoutinesByActivity(activityId);
+        res.send(routines);
+    } catch ({ name, message }) {
+        ({ name, message })
+    };
 });
 
 activitiesRouter.post('/', requireUser, async (req, res, next) => {
@@ -21,7 +29,7 @@ activitiesRouter.post('/', requireUser, async (req, res, next) => {
         const activity = await createActivity(activityData);
         
         if (activity) {
-            res.send({ activity });
+            res.send(activity);
         } else {
             next({
                 name: "CreateActivityError",

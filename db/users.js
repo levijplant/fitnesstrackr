@@ -87,5 +87,5 @@ module.exports = {
     getAllUsers,
     updateUser,
     getUserById,
-    getUserByUsername
+    getUserByUsername,
 };

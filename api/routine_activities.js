@@ -1,8 +1,14 @@
-const routinesActivitiesRouter = require('express').Router();
-const { getRoutineActivityById, updateRoutineActivity } = require('../db/routine_activities');
+const routineActivitiesRouter = require('express').Router();
+const { getRoutineActivityById, updateRoutineActivity, deleteActivityFromRoutine } = require('../db');
 const { requireUser } = require('./utils');
 
-routinesActivitiesRouter.patch('/:routineActivityId', requireUser, async (req, res, next) => {
+routineActivitiesRouter.use((req, res, next) => {
+    console.log('A request is being made to /routine_activities');
+    next();
+});
+
+
+routineActivitiesRouter.patch('/:routineActivityId', requireUser, async (req, res, next) => {
     const { routineActivityId } = req.params;
     const { count, duration } = req.body;
 
@@ -10,39 +16,39 @@ routinesActivitiesRouter.patch('/:routineActivityId', requireUser, async (req, r
 
     if (count) {
         updateFields.count = count;
-    }
+    };
 
     if (duration) {
         updateFields.duration = duration;
-    }  
+    };  
 
     try {
         const originalRoutineActivity = await getRoutineActivityById(routineActivityId);
 
-        if(originalRoutineActivity.creatorId === req.user.id) {
+        if(originalRoutineActivity) {
             const updatedRoutineActivity = await updateRoutineActivity(routineActivityId, updateFields);
-            res.send({ routine: updatedRoutineActivity })
+            res.send({ routine: updatedRoutineActivity });
         }
     } catch ({ name, message }) {
         next({ name, message });
     };
 });
 
-routinesActivitiesRouter.delete('/:routineActivityId', requireUser, async (req, res, next) => {
+routineActivitiesRouter.delete('/:routineActivityId', requireUser, async (req, res, next) => {
     const { routineActivityId } = req.params;
 
     try {
         const routineActivity = await getRoutineActivityById(routineActivityId);
 
-        if (routineActivity.creatorId === req.user.id) {
-            await deleteRoutine(routineActivityId);
-            console.log('activity has been deleted from routine!');
-        }
+        if (routineActivity) {
+            await deleteActivityFromRoutine(routineActivityId);
+            console.log('Activity has been deleted from routine!');
+        };
 
-        res.send('activity has been deleted from routine!')
+        res.send('Activity has been deleted from routine!');
     } catch ({ name, message }) {
         next({ name, message })
-    }
+    };
 });
 
-module.exports = routinesActivitiesRouter;
+module.exports = routineActivitiesRouter;

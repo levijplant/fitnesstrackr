@@ -13,6 +13,7 @@ const {
     getAllPublicRoutines,
     getAllRoutinesByUser,
     getAllPublicRoutinesByUser,
+    addActivityToRoutine,
 } = require('./index');
 
 const bcrypt = require('bcrypt');
@@ -145,13 +146,13 @@ async function createInitialActivities() {
             },
 
             {
-                name: 'Wide Push Ups',
-                description: 'Push ups with your arms as wide as possible.'
+                name: 'Wide Push-Ups',
+                description: 'Push-Ups with your arms as wide as possible.'
             },
 
             {
-                name: 'Military Style Push Ups',
-                description: 'Keep arms as close to body throughout the range of motion.'
+                name: 'Military Style Push-Ups',
+                description: 'Keep arms close to body throughout the range of motion.'
             },
 
             {
@@ -226,6 +227,47 @@ async function createInitialRoutines() {
     };
 };
 
+async function createIntitialRoutineActivities() {
+    try {
+        console.log("Starting to seed routine_activities...");
+
+        const seededRoutineActivities = [
+            {
+                routineId: 1,
+                activityId: 4,
+                count: 25,
+                duration: 60
+            },
+            {
+                routineId: 1,
+                activityId: 5,
+                count: 25,
+                duration: 60
+            },
+            {
+                routineId: 4,
+                activityId: 6,
+                count: 10,
+                duration: 60
+            },
+            {
+                routineId: 4,
+                activityId: 7,
+                count: 10,
+                duration: 60
+            }
+        ];
+
+        await Promise.all(seededRoutineActivities.map(async routineActivity => {
+            const seededRoutineActivity = await addActivityToRoutine(routineActivity);
+            return seededRoutineActivity;
+        }));
+
+        console.log("Finished creating routine_activities...");
+    } catch (error) {
+        throw error;
+    };
+};
 
 async function rebuildDB() {
     try {
@@ -236,7 +278,7 @@ async function rebuildDB() {
         await createInitialUsers();
         await createInitialActivities();
         await createInitialRoutines();
-        // await createIntitialRoutinesActivities()
+        await createIntitialRoutineActivities()
     } catch (error) {
         console.log("Error during rebuildDB")
         throw error;
