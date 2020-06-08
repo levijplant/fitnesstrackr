@@ -51,12 +51,15 @@ routinesRouter.patch('/:routineId', requireUser, async (req, res, next) => {
 
     try {
         const originalRoutine = await getRoutineById(routineId);
+        console.log("Original Routine: ", originalRoutine);
+        console.log("creatorId", originalRoutine.creatorId)
 
         if(originalRoutine.creatorId === req.user.id) {
             const updatedRoutine = await updateRoutine(routineId, updateFields);
             res.send({ routine: updatedRoutine });
+        } else {
+            next({ message: "You cannot update a routine you did not create!"});
         };
-
     } catch ({ name, message }) {
         next({ name, message });
     };

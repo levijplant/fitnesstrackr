@@ -27,7 +27,7 @@ async function updateRoutine(id, fields = {}) {
     };
     try {
         const { rows } = await client.query(`
-            UPDATE users
+            UPDATE routines
             SET ${ setString }
             WHERE id=${ id }
             RETURNING *;
