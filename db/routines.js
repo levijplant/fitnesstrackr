@@ -149,16 +149,15 @@ async function getAllPublicRoutinesByUser(username) {
 async function getPublicRoutinesByActivity(activityId) {
     try {
         const { rows: routines } = await client.query(`
-            SELECT *
+            SELECT routines.*
             FROM routines
             JOIN routine_activities ON routine_activities."routineId"=routines.id
             WHERE routine_activities."activityId"=$1
+            AND public=true;
         `, [ activityId ]);
 
         for (let routine of routines) {
             routine.activities = await getActivitiesByRoutineId(routine.id);
-            console.log(routine.activities)
-
         };
 
         return routines;
@@ -167,16 +166,25 @@ async function getPublicRoutinesByActivity(activityId) {
     };
 };
 
-// try {
-//     const { rows } = await client.query(`
-//     SELECT *
-//     FROM activities
-//     JOIN routine_activities ON routine_activities."activityId"=activities.id
-//     WHERE routine_activities."routineId"=$1
-// `, [ routineId ]);
+async function getRoutinesByActivity(activityId) {
+    try {
+        const { rows: routines } = await client.query(`
+            SELECT routines.*
+            FROM routines
+            JOIN routine_activities ON routine_activities."routineId"=routines.id
+            WHERE routine_activities."activityId"=$1;
+        `, [ activityId ]);
 
-//     return rows;
+        for (let routine of routines) {
+            routine.activities = await getActivitiesByRoutineId(routine.id);
+        };
+        console.log("getRoutinesByActivity Routines: ", routines)
 
+        return routines;
+    } catch (error) {
+        throw error
+    };
+};
 
 async function deleteRoutine(id) {
     try {
@@ -204,5 +212,6 @@ module.exports = {
     getAllRoutinesByUser,
     getAllPublicRoutinesByUser,
     getPublicRoutinesByActivity,
+    getRoutinesByActivity,
     deleteRoutine,
 };

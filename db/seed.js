@@ -14,6 +14,7 @@ const {
     getAllRoutinesByUser,
     getAllPublicRoutinesByUser,
     addActivityToRoutine,
+    getRoutinesByActivity,
 } = require('./index');
 
 const bcrypt = require('bcrypt');
@@ -335,6 +336,10 @@ async function testDB() {
         console.log("Calling getAllPublicRoutinesByUser with user muscleshuge");
         const muscleshugePublicRoutines = await getAllPublicRoutinesByUser("muscleshuge");
         console.log("muscleshuge Public Routines: ", muscleshugePublicRoutines);
+
+        console.log("Calling getRoutinesByActivity with 4...");
+        const activityFourRoutines = await getRoutinesByActivity(5);
+        console.log("Activity Four Routines: ", activityFourRoutines);
 
         console.log("Finished testing the database!")
     } catch (error) {

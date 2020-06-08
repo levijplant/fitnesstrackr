@@ -71,9 +71,10 @@ routinesRouter.delete('/:routineId', requireUser, async (req, res, next) => {
         if (routine.creatorId === req.user.id) {
             await deleteRoutine(routineId);
             console.log('routine has been deleted!');
+            res.send('routine has been deleted!')
+        } else {
+            next({ message: "You must be the owner of the routine to delete it!"})
         };
-
-        res.send('routine has been deleted!')
     } catch ({ name, message }) {
         next({ name, message });
     };
@@ -82,11 +83,16 @@ routinesRouter.delete('/:routineId', requireUser, async (req, res, next) => {
 routinesRouter.post('/:routineId/activities', requireUser, async (req, res, next) => {
     const { routineId } = req.params;
     const { activityId, count, duration } = req.body;
+    const { creatorId } = await getRoutineById(routineId);
+
 
     try {
+        if (creatorId === req.user.id) {
         const routineActivity = await addActivityToRoutine({routineId, activityId, count, duration});
-    
         res.send({ routineActivity });
+        } else {
+            next({ message: "You are not authorized to update routine!"})
+        };
     } catch ({ name, message }) {
         next({ name, message });
     };

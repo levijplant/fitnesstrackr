@@ -1,6 +1,7 @@
 const routineActivitiesRouter = require('express').Router();
-const { getRoutineActivityById, updateRoutineActivity, deleteActivityFromRoutine } = require('../db');
+const { getRoutineActivityById, updateRoutineActivity, getRoutinesByActivity, deleteActivityFromRoutine } = require('../db');
 const { requireUser } = require('./utils');
+const client = require('../db/database')
 
 routineActivitiesRouter.use((req, res, next) => {
     console.log('A request is being made to /routine_activities');
@@ -23,12 +24,21 @@ routineActivitiesRouter.patch('/:routineActivityId', requireUser, async (req, re
     };  
 
     try {
-        const originalRoutineActivity = await getRoutineActivityById(routineActivityId);
+        const { rows: [ routine_activity ] } = await client.query(`
+            SELECT * 
+            FROM routine_activities
+            JOIN routines ON routine_activities."routineId" = routines.id
+            AND routine_activities.id = $1;
+        `, [ routineActivityId ]);
 
-        if(originalRoutineActivity) {
+        const originalRoutineActivity = await getRoutineActivityById (routineActivityId);
+
+        if(originalRoutineActivity && req.user.id === routine_activity.creatorId) {
             const updatedRoutineActivity = await updateRoutineActivity(routineActivityId, updateFields);
-            res.send({ routine: updatedRoutineActivity });
-        }
+            res.send({ Updated_Routine: updatedRoutineActivity });
+        } else {
+            next({ message: "You are not authorized to update a routine you did not create!"})
+        };
     } catch ({ name, message }) {
         next({ name, message });
     };
@@ -36,16 +46,25 @@ routineActivitiesRouter.patch('/:routineActivityId', requireUser, async (req, re
 
 routineActivitiesRouter.delete('/:routineActivityId', requireUser, async (req, res, next) => {
     const { routineActivityId } = req.params;
+    const { creatorId } = await getRoutinesByActivity(routineActivityId);
+    console.log(creatorId);
 
     try {
+        const { rows: [ routine_activity ] } = await client.query(`
+        SELECT * 
+        FROM routine_activities
+        JOIN routines ON routine_activities."routineId" = routines.id
+        AND routine_activities.id = $1;
+    `, [ routineActivityId ]);
+
         const routineActivity = await getRoutineActivityById(routineActivityId);
 
-        if (routineActivity) {
+        if (routineActivity && req.user.id === routine_activity.creatorId) {
             await deleteActivityFromRoutine(routineActivityId);
-            console.log('Activity has been deleted from routine!');
+            res.send('Activity has been deleted from routine!');
+        } else {
+            next({ message: "You are not authorized to delete an activity from a routine you did not create!"});
         };
-
-        res.send('Activity has been deleted from routine!');
     } catch ({ name, message }) {
         next({ name, message })
     };
